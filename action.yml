@@ -196,9 +196,10 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         errors: true
         payload: |
-          channel: ${{ inputs.channel }}
-          text: "New Release: ${{ steps.auto-release.outputs.name || steps.auto-release.outputs.tag }}"
-          blocks: [
+          {
+            "channel": "${{ inputs.channel }}",
+            "text": "New Release: ${{ steps.auto-release.outputs.name || steps.auto-release.outputs.tag }}",
+            "blocks": [
               {
                 "type": "section",
                 "text": {
@@ -248,6 +249,7 @@ runs:
                 ]
               }
             ]
+          }
 
     - name: Send deployment success notification
       if: inputs.type == 'deployment-success'
@@ -257,9 +259,10 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         errors: true
         payload: |
-          channel: ${{ inputs.channel }}
-          text: "Deployment Successful: ${{ inputs.environment }}"
-          blocks: [
+          {
+            "channel": "${{ inputs.channel }}",
+            "text": "Deployment Successful: ${{ inputs.environment }}",
+            "blocks": [
               {
                 "type": "section",
                 "text": {
@@ -302,6 +305,7 @@ runs:
                 ]
               }
             ]
+          }
 
     - name: Send deployment failure notification
       if: inputs.type == 'deployment-failure'
@@ -311,9 +315,10 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         errors: true
         payload: |
-          channel: ${{ inputs.channel }}
-          text: "Deployment Failed: ${{ inputs.environment }}"
-          blocks: [
+          {
+            "channel": "${{ inputs.channel }}",
+            "text": "Deployment Failed: ${{ inputs.environment }}",
+            "blocks": [
               {
                 "type": "section",
                 "text": {
@@ -358,6 +363,7 @@ runs:
                 ]
               }
             ]
+          }
 
     - name: Send staging deployment notification
       if: inputs.type == 'staging'
@@ -368,9 +374,10 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         errors: true
         payload: |
-          channel: ${{ inputs.channel }}
-          text: "Staging Updated: ${{ inputs.environment || 'staging' }}"
-          blocks: [
+          {
+            "channel": "${{ inputs.channel }}",
+            "text": "Staging Updated: ${{ inputs.environment || 'staging' }}",
+            "blocks": [
               {
                 "type": "section",
                 "text": {
@@ -429,6 +436,7 @@ runs:
                 ]
               }
             ]
+          }
 
     - name: Debug Slack response
       if: inputs.type == 'staging'
