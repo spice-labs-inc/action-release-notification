@@ -14,6 +14,9 @@ inputs:
     description: 'Slack channel ID or name (e.g. #releases or C1234567890)'
     required: true
     default: '#release-notifications'
+  channel-id:
+    description: 'Slack channel ID for reactions (use output from release notification)'
+    required: false
   
   # GitHub→Slack username mapping
   username-mapping:
@@ -71,6 +74,9 @@ outputs:
   timestamp:
     description: 'Timestamp of the sent message (for threading replies)'
     value: ${{ steps.extract-ts.outputs.timestamp }}
+  channel_id:
+    description: 'Channel ID of the sent message (for reactions)'
+    value: ${{ steps.extract-ts.outputs.channel_id }}
 
 runs:
   using: 'composite'
@@ -351,15 +357,18 @@ runs:
             ]
           }
 
-    - name: Extract and set timestamp
+    - name: Extract and set timestamp and channel ID
       if: inputs.type == 'release'
       id: extract-ts
       shell: bash
       run: |
         RESPONSE='${{ steps.slack-release.outputs.response }}'
         TIMESTAMP=$(echo "$RESPONSE" | jq -r '.ts')
+        CHANNEL_ID=$(echo "$RESPONSE" | jq -r '.channel')
         echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+        echo "channel_id=$CHANNEL_ID" >> $GITHUB_OUTPUT
         echo "Release message timestamp: $TIMESTAMP"
+        echo "Channel ID: $CHANNEL_ID"
 
     - name: Debug deployment threading
       if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
@@ -388,7 +397,7 @@ runs:
         errors: true
         payload: |
           {
-            "channel": "${{ inputs.channel }}",
+            "channel": "${{ inputs.channel-id || inputs.channel }}",
             "timestamp": "${{ inputs.thread-ts }}",
             "name": "hourglass_flowing_sand"
           }
@@ -416,7 +425,7 @@ runs:
         errors: true
         payload: |
           {
-            "channel": "${{ inputs.channel }}",
+            "channel": "${{ inputs.channel-id || inputs.channel }}",
             "timestamp": "${{ inputs.thread-ts }}",
             "name": "hourglass_flowing_sand"
           }
@@ -430,7 +439,7 @@ runs:
         errors: true
         payload: |
           {
-            "channel": "${{ inputs.channel }}",
+            "channel": "${{ inputs.channel-id || inputs.channel }}",
             "timestamp": "${{ inputs.thread-ts }}",
             "name": "white_check_mark"
           }
@@ -458,7 +467,7 @@ runs:
         errors: true
         payload: |
           {
-            "channel": "${{ inputs.channel }}",
+            "channel": "${{ inputs.channel-id || inputs.channel }}",
             "timestamp": "${{ inputs.thread-ts }}",
             "name": "hourglass_flowing_sand"
           }
@@ -472,7 +481,7 @@ runs:
         errors: true
         payload: |
           {
-            "channel": "${{ inputs.channel }}",
+            "channel": "${{ inputs.channel-id || inputs.channel }}",
             "timestamp": "${{ inputs.thread-ts }}",
             "name": "x"
           }
