@@ -454,7 +454,7 @@ runs:
           {
             "channel": "${{ inputs.channel }}",
             "thread_ts": "${{ inputs.thread-ts }}",
-            "text": "✅ Deployment to ${{ inputs.environment }} successful! <${{ steps.workflow-url.outputs.url }}|View workflow>"
+            "text": "✅ ${{ inputs.workflow-name }} successful! <${{ steps.workflow-url.outputs.url }}|View workflow>"
           }
 
 
@@ -498,7 +498,7 @@ runs:
           {
             "channel": "${{ inputs.channel }}",
             "thread_ts": "${{ inputs.thread-ts }}",
-            "text": "❌ Deployment to ${{ inputs.environment }} failed! <${{ steps.workflow-url.outputs.url }}|View workflow>"
+            "text": "❌ ${{ inputs.workflow-name }} failed! <${{ steps.workflow-url.outputs.url }}|View workflow>"
           }
 
 
