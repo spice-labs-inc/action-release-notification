@@ -190,12 +190,13 @@ runs:
 
     - name: Send release notification
       if: inputs.type == 'release'
-      uses: slackapi/slack-github-action@v1.27.0
+      uses: slackapi/slack-github-action@v2
       with:
-        channel-id: ${{ inputs.channel }}
+        method: chat.postMessage
+        token: ${{ inputs.slack-bot-token }}
         payload: |
-          {
-            "blocks": [
+          channel: ${{ inputs.channel }}
+          blocks: [
               {
                 "type": "section",
                 "text": {
@@ -245,18 +246,16 @@ runs:
                 ]
               }
             ]
-          }
-      env:
-        SLACK_BOT_TOKEN: ${{ inputs.slack-bot-token }}
 
     - name: Send deployment success notification
       if: inputs.type == 'deployment-success'
-      uses: slackapi/slack-github-action@v1.27.0
+      uses: slackapi/slack-github-action@v2
       with:
-        channel-id: ${{ inputs.channel }}
+        method: chat.postMessage
+        token: ${{ inputs.slack-bot-token }}
         payload: |
-          {
-            "blocks": [
+          channel: ${{ inputs.channel }}
+          blocks: [
               {
                 "type": "section",
                 "text": {
@@ -299,18 +298,16 @@ runs:
                 ]
               }
             ]
-          }
-      env:
-        SLACK_BOT_TOKEN: ${{ inputs.slack-bot-token }}
 
     - name: Send deployment failure notification
       if: inputs.type == 'deployment-failure'
-      uses: slackapi/slack-github-action@v1.27.0
+      uses: slackapi/slack-github-action@v2
       with:
-        channel-id: ${{ inputs.channel }}
+        method: chat.postMessage
+        token: ${{ inputs.slack-bot-token }}
         payload: |
-          {
-            "blocks": [
+          channel: ${{ inputs.channel }}
+          blocks: [
               {
                 "type": "section",
                 "text": {
@@ -355,18 +352,16 @@ runs:
                 ]
               }
             ]
-          }
-      env:
-        SLACK_BOT_TOKEN: ${{ inputs.slack-bot-token }}
 
     - name: Send staging deployment notification
       if: inputs.type == 'staging'
-      uses: slackapi/slack-github-action@v1.27.0
+      uses: slackapi/slack-github-action@v2
       with:
-        channel-id: ${{ inputs.channel }}
+        method: chat.postMessage
+        token: ${{ inputs.slack-bot-token }}
         payload: |
-          {
-            "blocks": [
+          channel: ${{ inputs.channel }}
+          blocks: [
               {
                 "type": "section",
                 "text": {
@@ -394,27 +389,24 @@ runs:
                     "text": "*Pushed by:*\n${{ steps.map-user.outputs.slack-mention }}"
                   }
                 ]
-              }
-              ${{ (inputs.commit-message != '' || steps.staging-notes.outputs.notes != '') && ',' || '' }}
-              ${{ (inputs.commit-message != '' || steps.staging-notes.outputs.notes != '') && format('{
+              },
+              {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Recent Changes:*\n{0}"
+                  "text": "*Recent Changes:*\n${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}"
                 }
-              }', steps.staging-notes.outputs.notes || inputs.commit-message) || '' }}
-              ${{ inputs.commit-sha != '' && ',' || '' }}
-              ${{ inputs.commit-sha != '' && format('{
+              },
+              {
                 "type": "context",
                 "elements": [
                   {
                     "type": "mrkdwn",
-                    "text": "Commit: `{0}`"
+                    "text": "Commit: `${{ inputs.commit-sha || github.sha }}`"
                   }
                 ]
-              }', inputs.commit-sha) || '' }}
-              ${{ inputs.staging-url != '' && ',' || '' }}
-              ${{ inputs.staging-url != '' && format('{
+              },
+              {
                 "type": "actions",
                 "elements": [
                   {
@@ -423,14 +415,11 @@ runs:
                       "type": "plain_text",
                       "text": "View Staging"
                     },
-                    "url": "{0}"
+                    "url": "${{ inputs.staging-url || 'https://staging.example.com' }}"
                   }
                 ]
-              }', inputs.staging-url) || '' }}
+              }
             ]
-          }
-      env:
-        SLACK_BOT_TOKEN: ${{ inputs.slack-bot-token }}
 
 branding:
   icon: 'message-square'
