@@ -297,8 +297,25 @@ runs:
         # Convert _italic_ to _italic_ (keep as is)
         # Convert [link](url) to <url|link>
         FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/\[\([^]]*\)\](\([^)]*\))/<\2|\1>/g')
-        # Convert GitHub @mentions to Slack mentions
-        FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/@\([a-zA-Z0-9_-]*\)/`@\1`/g')
+        # Convert GitHub @mentions to Slack mentions using username mapping
+        MAPPING='${{ inputs.username-mapping }}'
+        if [ -n "$MAPPING" ] && [ "$MAPPING" != "{}" ]; then
+          # Extract GitHub usernames and replace with Slack mentions
+          GITHUB_USERS=$(echo "$FORMATTED_NOTES" | grep -oE '@[a-zA-Z0-9_-]+' | sed 's/@//' | sort -u)
+          for github_user in $GITHUB_USERS; do
+            SLACK_USER=$(echo "$MAPPING" | jq -r --arg user "$github_user" '.[$user] // empty')
+            if [ -n "$SLACK_USER" ] && [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
+              # Replace with proper Slack mention
+              FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed "s/@$github_user/<@$SLACK_USER>/g")
+            else
+              # Keep as backtick mention if no mapping found
+              FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed "s/@$github_user/\`@$github_user\`/g")
+            fi
+          done
+        else
+          # Fallback: convert to backtick mentions
+          FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/@\([a-zA-Z0-9_-]*\)/`@\1`/g')
+        fi
         
         # Truncate if too long (Slack has limits)
         if [ ${#FORMATTED_NOTES} -gt 1500 ]; then
@@ -361,13 +378,6 @@ runs:
                 "text": {
                   "type": "mrkdwn",
                   "text": "```${{ steps.format-notes.outputs.formatted }}```"
-                }
-              },
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "*Contributors:*\n${{ steps.release-contributors.outputs.mentions || 'No contributors found' }}"
                 }
               },
               {
