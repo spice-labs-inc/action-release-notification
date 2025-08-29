@@ -216,7 +216,9 @@ runs:
         if [ -n "${{ inputs.workflow-url }}" ]; then
           echo "url=${{ inputs.workflow-url }}" >> $GITHUB_OUTPUT
         else
-          echo "url=https://github.com/${{ inputs.repository }}/actions" >> $GITHUB_OUTPUT
+          # Generate the current workflow run URL
+          RUN_URL="https://github.com/${{ inputs.repository }}/actions/runs/${{ github.run_id }}"
+          echo "url=$RUN_URL" >> $GITHUB_OUTPUT
         fi
 
     - name: Auto-generate staging notes from commits
@@ -331,7 +333,14 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Release Notes:*\n${{ steps.format-notes.outputs.formatted }}"
+                  "text": "*Release Notes:*"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "```${{ steps.format-notes.outputs.formatted }}```"
                 }
               },
               {
@@ -413,7 +422,7 @@ runs:
           {
             "channel": "${{ inputs.channel }}",
             "thread_ts": "${{ inputs.thread-ts }}",
-            "text": "✅ Deployment to ${{ inputs.environment }} successful!"
+            "text": "✅ Deployment to ${{ inputs.environment }} successful! <${{ steps.workflow-url.outputs.url }}|View workflow>"
           }
 
     - name: Remove in-progress reaction from original post
@@ -455,7 +464,7 @@ runs:
           {
             "channel": "${{ inputs.channel }}",
             "thread_ts": "${{ inputs.thread-ts }}",
-            "text": "❌ Deployment to ${{ inputs.environment }} failed!"
+            "text": "❌ Deployment to ${{ inputs.environment }} failed! <${{ steps.workflow-url.outputs.url }}|View workflow>"
           }
 
     - name: Remove in-progress reaction from original post
