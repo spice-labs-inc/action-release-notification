@@ -179,8 +179,16 @@ runs:
       run: |
         NOTES='${{ steps.auto-release.outputs.body }}'
         
-        # Convert GitHub @mentions to Slack format (basic conversion)
-        FORMATTED_NOTES=$(echo "$NOTES" | sed 's/@\([a-zA-Z0-9_-]*\)/`@\1`/g')
+        # Convert markdown to Slack format
+        # Convert **bold** to *bold*
+        FORMATTED_NOTES=$(echo "$NOTES" | sed 's/\*\*\([^*]*\)\*\*/\*\1\*/g')
+        # Convert _italic_ and *italic* to _italic_
+        FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/\*\([^*]*\)\*/_\1_/g')
+        # Convert `code` to `code` (already correct)
+        # Convert [link](url) to <url|link>
+        FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/\[\([^]]*\)\](\([^)]*\))/<\2|\1>/g')
+        # Convert GitHub @mentions to Slack mentions
+        FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/@\([a-zA-Z0-9_-]*\)/`@\1`/g')
         
         # Truncate if too long (Slack has limits)
         if [ ${#FORMATTED_NOTES} -gt 1500 ]; then
@@ -254,6 +262,21 @@ runs:
               }
             ]
           }
+
+    - name: Debug release message timestamp
+      if: inputs.type == 'release'
+      shell: bash
+      run: |
+        echo "Release message timestamp: ${{ steps.slack-release.outputs.ts }}"
+        echo "Full response: ${{ steps.slack-release.outputs.response }}"
+
+    - name: Debug deployment threading
+      if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
+      shell: bash
+      run: |
+        echo "Thread timestamp: '${{ inputs.thread-ts }}'"
+        echo "Channel: '${{ inputs.channel }}'"
+        echo "Environment: '${{ inputs.environment }}'"
 
     - name: Send deployment success notification
       if: inputs.type == 'deployment-success'
