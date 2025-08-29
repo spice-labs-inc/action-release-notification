@@ -261,11 +261,6 @@ runs:
         echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         echo "contributors=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
-        
-        # Debug output
-        echo "DEBUG: Commit notes preview:"
-        echo "$COMMIT_NOTES" | head -3
-        echo "DEBUG: Number of lines in commit notes: $(echo "$COMMIT_NOTES" | wc -l)"
 
     - name: Format release notes
       if: inputs.type == 'release'
@@ -552,7 +547,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}\n\n*Contributors:* ${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}"
+                  "text": "```${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}\n\nContributors: ${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}```"
                 }
               },
               {
