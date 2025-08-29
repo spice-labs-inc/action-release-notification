@@ -273,8 +273,10 @@ runs:
           done
         fi
         
+        # Clean up line endings before output
+        CLEAN_NOTES=$(echo "$COMMIT_NOTES" | tr -d '\r')
         echo "notes<<EOF" >> $GITHUB_OUTPUT
-        echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
+        echo "$CLEAN_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         echo "contributors=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
 
