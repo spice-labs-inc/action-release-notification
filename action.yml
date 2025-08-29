@@ -361,6 +361,7 @@ runs:
 
     - name: Send staging deployment notification
       if: inputs.type == 'staging'
+      id: slack-staging
       uses: slackapi/slack-github-action@v2
       with:
         method: chat.postMessage
@@ -428,6 +429,15 @@ runs:
                 ]
               }
             ]
+
+    - name: Debug Slack response
+      if: inputs.type == 'staging'
+      shell: bash
+      run: |
+        echo "Slack API Response:"
+        echo "Status: ${{ steps.slack-staging.outputs.ok }}"
+        echo "Error: ${{ steps.slack-staging.outputs.error }}"
+        echo "Response: ${{ steps.slack-staging.outputs.response }}"
 
 branding:
   icon: 'message-square'
