@@ -162,8 +162,8 @@ runs:
         COMMITS=$(curl -s -H "Authorization: token ${{ inputs.github-token }}" \
           "https://api.github.com/repos/${{ inputs.repository }}/commits?sha=${{ inputs.branch }}&per_page=5")
         
-        # Format commits into readable notes
-        COMMIT_NOTES=$(echo "$COMMITS" | jq -r '.[] | "• " + .commit.message' | head -5)
+        # Format commits into readable notes with links
+        COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"' | head -5)
         
         echo "notes<<EOF" >> $GITHUB_OUTPUT
         echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
