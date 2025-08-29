@@ -273,8 +273,17 @@ runs:
           done
         fi
         
-        # Clean up line endings before output
-        CLEAN_NOTES=$(echo "$COMMIT_NOTES" | tr -d '\r')
+        # Clean up line endings and debug
+        echo "DEBUG: Raw commit notes length: ${#COMMIT_NOTES}"
+        echo "DEBUG: First 100 chars of commit notes: ${COMMIT_NOTES:0:100}"
+        
+        # Aggressive cleanup of problematic characters
+        CLEAN_NOTES=$(echo "$COMMIT_NOTES" | tr -d '\r\n' | tr '\n' ' ')
+        if [ -z "$CLEAN_NOTES" ]; then
+          CLEAN_NOTES="No commit information available"
+        fi
+        
+        echo "DEBUG: Clean notes: $CLEAN_NOTES"
         echo "notes<<EOF" >> $GITHUB_OUTPUT
         echo "$CLEAN_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
