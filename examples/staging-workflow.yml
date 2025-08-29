@@ -1,0 +1,41 @@
+# Example workflow for staging notifications
+# Place this in .github/workflows/staging-deploy.yml in your consuming repository
+
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get commit details (optional - can be auto-generated)
+        id: commit
+        run: |
+          echo "short_sha=$(git log -1 --pretty=format:'%h')" >> $GITHUB_OUTPUT
+
+      - name: Deploy to staging
+        run: |
+          # Your staging deployment steps here
+          echo "Deploying to staging..."
+          # Simulate deployment
+          sleep 5
+          echo "Staging deployment complete"
+
+      - name: Notify staging deployment
+        uses: spice-labs-inc/action-release-notification@v1
+        with:
+          type: staging
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: "#staging"
+          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
+          github-token: ${{ github.token }}  # Enables auto-generated recent commits
+          environment: staging
+          commit-sha: ${{ steps.commit.outputs.short_sha }}
+          staging-url: "https://staging.yourdomain.com"
+          # commit-message will be auto-generated from recent commits if not provided

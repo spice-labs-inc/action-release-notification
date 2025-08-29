@@ -1,0 +1,24 @@
+# Example workflow with auto-generated release notes
+# Place this in .github/workflows/release-notifications.yml in your consuming repository
+
+name: Release Notifications (Auto-generated)
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify-release:
+    runs-on: ubuntu-latest
+    steps:
+      # Simple usage - automatically pulls release info from GitHub
+      - name: Send release notification to Slack
+        uses: spice-labs-inc/action-release-notification@v1
+        with:
+          type: release
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: "#releases"
+          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
+          github-token: ${{ github.token }}
+          # No need to specify release-tag, release-name, release-notes, or release-url
+          # They'll be auto-generated from the GitHub release

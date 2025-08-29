@@ -1,0 +1,24 @@
+# Example workflow for release notifications
+# Place this in .github/workflows/release-notifications.yml in your consuming repository
+
+name: Release Notifications
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  notify-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send release notification to Slack
+        uses: spice-labs-inc/action-release-notification@v1
+        with:
+          type: release
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: "#releases"
+          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
+          release-tag: ${{ github.event.release.tag_name }}
+          release-name: ${{ github.event.release.name }}
+          release-notes: ${{ github.event.release.body }}
+          release-url: ${{ github.event.release.html_url }}

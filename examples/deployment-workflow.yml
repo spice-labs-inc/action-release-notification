@@ -1,0 +1,49 @@
+# Example workflow for deployment notifications  
+# Place this in .github/workflows/deploy-production.yml in your consuming repository
+
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy to production
+        id: deploy
+        run: |
+          # Your deployment steps here
+          echo "Deploying to production..."
+          # Simulate deployment
+          sleep 10
+          echo "Deployment complete"
+
+      - name: Notify deployment success
+        if: success()
+        uses: spice-labs-inc/action-release-notification@v1
+        with:
+          type: deployment-success
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: "#deployments"
+          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
+          workflow-name: ${{ github.workflow }}
+          environment: production
+          workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: spice-labs-inc/action-release-notification@v1
+        with:
+          type: deployment-failure
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: "#deployments"
+          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
+          workflow-name: ${{ github.workflow }}
+          environment: production
+          workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
