@@ -369,6 +369,15 @@ runs:
         echo "Channel: '${{ inputs.channel }}'"
         echo "Environment: '${{ inputs.environment }}'"
 
+    - name: Debug reaction parameters
+      if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
+      shell: bash
+      run: |
+        echo "Reaction debug info:"
+        echo "Channel: '${{ inputs.channel }}'"
+        echo "Timestamp: '${{ inputs.thread-ts }}'"
+        echo "Timestamp length: ${#'${{ inputs.thread-ts }}'}"
+
     - name: Add in-progress reaction to original post
       if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
       uses: slackapi/slack-github-action@v2
