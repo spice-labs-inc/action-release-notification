@@ -196,6 +196,7 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         payload: |
           channel: ${{ inputs.channel }}
+          text: "New Release: ${{ steps.auto-release.outputs.name || steps.auto-release.outputs.tag }}"
           blocks: [
               {
                 "type": "section",
@@ -255,6 +256,7 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         payload: |
           channel: ${{ inputs.channel }}
+          text: "Deployment Successful: ${{ inputs.environment }}"
           blocks: [
               {
                 "type": "section",
@@ -307,6 +309,7 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         payload: |
           channel: ${{ inputs.channel }}
+          text: "Deployment Failed: ${{ inputs.environment }}"
           blocks: [
               {
                 "type": "section",
@@ -361,6 +364,7 @@ runs:
         token: ${{ inputs.slack-bot-token }}
         payload: |
           channel: ${{ inputs.channel }}
+          text: "Staging Updated: ${{ inputs.environment || 'staging' }}"
           blocks: [
               {
                 "type": "section",
