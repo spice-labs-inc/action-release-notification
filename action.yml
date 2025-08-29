@@ -230,15 +230,8 @@ runs:
         COMMITS=$(curl -s -H "Authorization: token ${{ inputs.github-token }}" \
           "https://api.github.com/repos/${{ inputs.repository }}/commits?sha=${{ inputs.branch }}&per_page=5")
         
-        # Format commits into readable notes with links (ensure proper line breaks)
-        COMMIT_NOTES=""
-        while IFS= read -r commit_line; do
-          if [ -n "$COMMIT_NOTES" ]; then
-            COMMIT_NOTES="$COMMIT_NOTES"$'\n'"$commit_line"
-          else
-            COMMIT_NOTES="$commit_line"
-          fi
-        done < <(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"' | head -5)
+        # Format commits into readable notes with line breaks
+        COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"' | head -5)
         
         # Get contributors from recent commits
         CONTRIBUTORS=$(echo "$COMMITS" | jq -r '.[].author.login' | sort -u | grep -v null || true)
@@ -268,6 +261,11 @@ runs:
         echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         echo "contributors=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
+        
+        # Debug output
+        echo "DEBUG: Commit notes preview:"
+        echo "$COMMIT_NOTES" | head -3
+        echo "DEBUG: Number of lines in commit notes: $(echo "$COMMIT_NOTES" | wc -l)"
 
     - name: Format release notes
       if: inputs.type == 'release'
@@ -554,7 +552,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "```${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}\n\nContributors: ${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}```"
+                  "text": "${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}\n\n*Contributors:* ${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}"
                 }
               },
               {
