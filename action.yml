@@ -391,7 +391,11 @@ runs:
       id: extract-ts
       shell: bash
       run: |
-        RESPONSE='${{ steps.slack-release.outputs.response }}'
+        # Use cat with EOF to avoid quote issues with JSON response
+        RESPONSE=$(cat <<'END_OF_JSON'
+        ${{ steps.slack-release.outputs.response }}
+        END_OF_JSON
+        )
         TIMESTAMP=$(echo "$RESPONSE" | jq -r '.ts')
         CHANNEL_ID=$(echo "$RESPONSE" | jq -r '.channel')
         echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
