@@ -395,6 +395,21 @@ runs:
         echo "Release message timestamp: $TIMESTAMP"
         echo "Channel ID: $CHANNEL_ID"
 
+    - name: Add hourglass reaction to release post
+      if: inputs.type == 'release'
+      uses: slackapi/slack-github-action@v2
+      continue-on-error: true
+      with:
+        method: reactions.add
+        token: ${{ inputs.slack-bot-token }}
+        errors: false
+        payload: |
+          {
+            "channel": "${{ steps.extract-ts.outputs.channel_id }}",
+            "timestamp": "${{ steps.extract-ts.outputs.timestamp }}",
+            "name": "hourglass_flowing_sand"
+          }
+
     - name: Debug deployment threading
       if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
       shell: bash
@@ -442,6 +457,7 @@ runs:
             "text": "✅ Deployment to ${{ inputs.environment }} successful! <${{ steps.workflow-url.outputs.url }}|View workflow>"
           }
 
+
     - name: Remove in-progress reaction from original post
       if: inputs.type == 'deployment-success'
       uses: slackapi/slack-github-action@v2
@@ -484,6 +500,7 @@ runs:
             "thread_ts": "${{ inputs.thread-ts }}",
             "text": "❌ Deployment to ${{ inputs.environment }} failed! <${{ steps.workflow-url.outputs.url }}|View workflow>"
           }
+
 
     - name: Remove in-progress reaction from original post
       if: inputs.type == 'deployment-failure'
