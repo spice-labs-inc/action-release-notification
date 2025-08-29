@@ -376,7 +376,8 @@ runs:
         echo "Reaction debug info:"
         echo "Channel: '${{ inputs.channel }}'"
         echo "Timestamp: '${{ inputs.thread-ts }}'"
-        echo "Timestamp length: ${#'${{ inputs.thread-ts }}'}"
+        TS="${{ inputs.thread-ts }}"
+        echo "Timestamp length: ${#TS}"
 
     - name: Add in-progress reaction to original post
       if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
