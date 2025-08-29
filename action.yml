@@ -291,9 +291,18 @@ runs:
           done
         fi
         
+        # Instead of multiline notes, create individual commit lines for better Slack formatting
+        COMMIT_LIST=""
+        if [ -n "$COMMIT_NOTES" ]; then
+          # Convert to JSON array of individual commits for Slack blocks
+          COMMIT_JSON=$(echo "$COMMITS" | jq --arg repo "${{ inputs.repository }}" '[.[] | "• <https://github.com/" + $repo + "/commit/" + (if has("id") then .id else .sha end) + "|" + (if has("message") then .message else .commit.message end) + ">"]')
+          COMMIT_LIST="$COMMIT_JSON"
+        fi
+        
         echo "notes<<EOF" >> $GITHUB_OUTPUT
         echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
+        echo "commit_list=$COMMIT_LIST" >> $GITHUB_OUTPUT
         echo "contributors=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
 
     - name: Format release notes
@@ -574,7 +583,23 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Recent Changes:*\n${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}\n\n*Contributors:*\n${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}"
+                  "text": "*Recent Changes:*"
+                }
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Contributors:*\n${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}"
                 }
               },
               {
