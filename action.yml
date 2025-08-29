@@ -416,10 +416,11 @@ runs:
     - name: Add in-progress reaction to original post
       if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
       uses: slackapi/slack-github-action@v2
+      continue-on-error: true
       with:
         method: reactions.add
         token: ${{ inputs.slack-bot-token }}
-        errors: true
+        errors: false
         payload: |
           {
             "channel": "${{ inputs.channel-id || inputs.channel }}",
@@ -444,10 +445,11 @@ runs:
     - name: Remove in-progress reaction from original post
       if: inputs.type == 'deployment-success'
       uses: slackapi/slack-github-action@v2
+      continue-on-error: true
       with:
         method: reactions.remove
         token: ${{ inputs.slack-bot-token }}
-        errors: true
+        errors: false
         payload: |
           {
             "channel": "${{ inputs.channel-id || inputs.channel }}",
@@ -486,10 +488,11 @@ runs:
     - name: Remove in-progress reaction from original post
       if: inputs.type == 'deployment-failure'
       uses: slackapi/slack-github-action@v2
+      continue-on-error: true
       with:
         method: reactions.remove
         token: ${{ inputs.slack-bot-token }}
-        errors: true
+        errors: false
         payload: |
           {
             "channel": "${{ inputs.channel-id || inputs.channel }}",
