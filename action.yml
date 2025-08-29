@@ -194,6 +194,7 @@ runs:
       with:
         method: chat.postMessage
         token: ${{ inputs.slack-bot-token }}
+        errors: true
         payload: |
           channel: ${{ inputs.channel }}
           text: "New Release: ${{ steps.auto-release.outputs.name || steps.auto-release.outputs.tag }}"
@@ -254,6 +255,7 @@ runs:
       with:
         method: chat.postMessage
         token: ${{ inputs.slack-bot-token }}
+        errors: true
         payload: |
           channel: ${{ inputs.channel }}
           text: "Deployment Successful: ${{ inputs.environment }}"
@@ -307,6 +309,7 @@ runs:
       with:
         method: chat.postMessage
         token: ${{ inputs.slack-bot-token }}
+        errors: true
         payload: |
           channel: ${{ inputs.channel }}
           text: "Deployment Failed: ${{ inputs.environment }}"
@@ -362,6 +365,7 @@ runs:
       with:
         method: chat.postMessage
         token: ${{ inputs.slack-bot-token }}
+        errors: true
         payload: |
           channel: ${{ inputs.channel }}
           text: "Staging Updated: ${{ inputs.environment || 'staging' }}"
