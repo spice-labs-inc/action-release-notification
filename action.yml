@@ -540,14 +540,21 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Recent Changes & Contributors:*"
+                  "text": "*Recent Changes:*"
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "```${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}\n\nContributors: ${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}```"
+                  "text": "```${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}```"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Contributors:*\n${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}"
                 }
               },
               {
