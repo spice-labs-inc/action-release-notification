@@ -445,7 +445,7 @@ runs:
         echo "Slack API Response:"
         echo "Status: ${{ steps.slack-staging.outputs.ok }}"
         echo "Error: ${{ steps.slack-staging.outputs.error }}"
-        echo "Response: ${{ steps.slack-staging.outputs.response }}"
+        echo "Response (truncated): $(echo '${{ steps.slack-staging.outputs.response }}' | head -c 200)"
 
 branding:
   icon: 'message-square'
