@@ -231,7 +231,7 @@ runs:
           "https://api.github.com/repos/${{ inputs.repository }}/commits?sha=${{ inputs.branch }}&per_page=5")
         
         # Format commits into readable notes with line breaks
-        COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | " - <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"' | head -5)
+        COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">\n"' | head -5)
         
         # Get contributors from recent commits
         CONTRIBUTORS=$(echo "$COMMITS" | jq -r '.[].author.login' | sort -u | grep -v null || true)
