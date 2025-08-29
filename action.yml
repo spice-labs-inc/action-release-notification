@@ -67,6 +67,11 @@ inputs:
     description: 'Commit SHA (short version recommended)'
     required: false
 
+outputs:
+  timestamp:
+    description: 'Timestamp of the sent message (for threading replies)'
+    value: ${{ steps.extract-ts.outputs.timestamp }}
+
 runs:
   using: 'composite'
   steps:
@@ -199,6 +204,13 @@ runs:
         echo "$FORMATTED_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
+    - name: Extract repository name
+      id: repo-name
+      shell: bash
+      run: |
+        REPO_NAME=$(echo "${{ inputs.repository }}" | cut -d'/' -f2)
+        echo "name=$REPO_NAME" >> $GITHUB_OUTPUT
+
     - name: Send release notification
       if: inputs.type == 'release'
       id: slack-release
@@ -210,26 +222,18 @@ runs:
         payload: |
           {
             "channel": "${{ inputs.channel }}",
-            "text": "New Release: ${{ steps.auto-release.outputs.name || steps.auto-release.outputs.tag }}",
+            "text": "New ${{ steps.repo-name.outputs.name }} release: ${{ steps.auto-release.outputs.tag }}",
             "blocks": [
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "🚀 *New Release: ${{ steps.auto-release.outputs.name || steps.auto-release.outputs.tag }}*"
+                  "text": "🚀 *New ${{ steps.repo-name.outputs.name }} release: ${{ steps.auto-release.outputs.tag }}*"
                 }
               },
               {
                 "type": "section",
                 "fields": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Repository:*\n${{ inputs.repository }}"
-                  },
-                  {
-                    "type": "mrkdwn", 
-                    "text": "*Version:*\n`${{ steps.auto-release.outputs.tag }}`"
-                  },
                   {
                     "type": "mrkdwn",
                     "text": "*Released by:*\n${{ steps.map-user.outputs.slack-mention }}"
