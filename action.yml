@@ -150,6 +150,58 @@ runs:
         echo "$RELEASE_BODY" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
+    - name: Get release contributors
+      if: inputs.type == 'release' && inputs.github-token != ''
+      id: release-contributors
+      shell: bash
+      run: |
+        # Get commits since last release
+        RELEASE_INFO=$(curl -s -H "Authorization: token ${{ inputs.github-token }}" \
+          "https://api.github.com/repos/${{ inputs.repository }}/releases")
+        
+        CURRENT_TAG="${{ inputs.release-tag }}"
+        if [ -z "$CURRENT_TAG" ]; then
+          CURRENT_TAG=$(echo "$RELEASE_INFO" | jq -r '.[0].tag_name')
+        fi
+        
+        # Get previous release tag for comparison
+        PREV_TAG=$(echo "$RELEASE_INFO" | jq -r --arg current "$CURRENT_TAG" '.[] | select(.tag_name != $current) | .tag_name' | head -1)
+        
+        if [ "$PREV_TAG" != "null" ] && [ -n "$PREV_TAG" ]; then
+          # Compare commits between tags
+          COMMITS=$(curl -s -H "Authorization: token ${{ inputs.github-token }}" \
+            "https://api.github.com/repos/${{ inputs.repository }}/compare/${PREV_TAG}...${CURRENT_TAG}")
+          CONTRIBUTORS=$(echo "$COMMITS" | jq -r '.commits[].author.login' | sort -u | grep -v null || true)
+        else
+          # First release - get recent commits
+          COMMITS=$(curl -s -H "Authorization: token ${{ inputs.github-token }}" \
+            "https://api.github.com/repos/${{ inputs.repository }}/commits?per_page=10")
+          CONTRIBUTORS=$(echo "$COMMITS" | jq -r '.[].author.login' | sort -u | grep -v null || true)
+        fi
+        
+        # Map contributors to Slack mentions
+        MAPPING='${{ inputs.username-mapping }}'
+        SLACK_MENTIONS=""
+        
+        if [ -n "$CONTRIBUTORS" ]; then
+          for contributor in $CONTRIBUTORS; do
+            if [ "$MAPPING" != "{}" ] && [ -n "$MAPPING" ]; then
+              SLACK_USER=$(echo "$MAPPING" | jq -r --arg user "$contributor" '.[$user] // $user')
+            else
+              SLACK_USER="$contributor"
+            fi
+            
+            # Format for Slack mention
+            if [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
+              SLACK_MENTIONS="$SLACK_MENTIONS <@$SLACK_USER>"
+            else
+              SLACK_MENTIONS="$SLACK_MENTIONS @$SLACK_USER"
+            fi
+          done
+        fi
+        
+        echo "mentions=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
+
     - name: Generate workflow URL
       if: startsWith(inputs.type, 'deployment-')
       id: workflow-url
@@ -173,9 +225,34 @@ runs:
         # Format commits into readable notes with links
         COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"' | head -5)
         
+        # Get contributors from recent commits
+        CONTRIBUTORS=$(echo "$COMMITS" | jq -r '.[].author.login' | sort -u | grep -v null || true)
+        
+        # Map contributors to Slack mentions
+        MAPPING='${{ inputs.username-mapping }}'
+        SLACK_MENTIONS=""
+        
+        if [ -n "$CONTRIBUTORS" ]; then
+          for contributor in $CONTRIBUTORS; do
+            if [ "$MAPPING" != "{}" ] && [ -n "$MAPPING" ]; then
+              SLACK_USER=$(echo "$MAPPING" | jq -r --arg user "$contributor" '.[$user] // $user')
+            else
+              SLACK_USER="$contributor"
+            fi
+            
+            # Format for Slack mention
+            if [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
+              SLACK_MENTIONS="$SLACK_MENTIONS <@$SLACK_USER>"
+            else
+              SLACK_MENTIONS="$SLACK_MENTIONS @$SLACK_USER"
+            fi
+          done
+        fi
+        
         echo "notes<<EOF" >> $GITHUB_OUTPUT
         echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
+        echo "contributors=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
 
     - name: Format release notes
       if: inputs.type == 'release'
@@ -252,6 +329,13 @@ runs:
                 }
               },
               {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Contributors:*\n${{ steps.release-contributors.outputs.mentions || 'No contributors found' }}"
+                }
+              },
+              {
                 "type": "actions",
                 "elements": [
                   {
@@ -285,6 +369,20 @@ runs:
         echo "Channel: '${{ inputs.channel }}'"
         echo "Environment: '${{ inputs.environment }}'"
 
+    - name: Add in-progress reaction to original post
+      if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
+      uses: slackapi/slack-github-action@v2
+      with:
+        method: reactions.add
+        token: ${{ inputs.slack-bot-token }}
+        errors: true
+        payload: |
+          {
+            "channel": "${{ inputs.channel }}",
+            "timestamp": "${{ inputs.thread-ts }}",
+            "name": "hourglass_flowing_sand"
+          }
+
     - name: Send deployment success notification
       if: inputs.type == 'deployment-success'
       uses: slackapi/slack-github-action@v2
@@ -299,6 +397,34 @@ runs:
             "text": "✅ Deployment to ${{ inputs.environment }} successful!"
           }
 
+    - name: Remove in-progress reaction from original post
+      if: inputs.type == 'deployment-success'
+      uses: slackapi/slack-github-action@v2
+      with:
+        method: reactions.remove
+        token: ${{ inputs.slack-bot-token }}
+        errors: true
+        payload: |
+          {
+            "channel": "${{ inputs.channel }}",
+            "timestamp": "${{ inputs.thread-ts }}",
+            "name": "hourglass_flowing_sand"
+          }
+
+    - name: Add success reaction to original post
+      if: inputs.type == 'deployment-success'
+      uses: slackapi/slack-github-action@v2
+      with:
+        method: reactions.add
+        token: ${{ inputs.slack-bot-token }}
+        errors: true
+        payload: |
+          {
+            "channel": "${{ inputs.channel }}",
+            "timestamp": "${{ inputs.thread-ts }}",
+            "name": "white_check_mark"
+          }
+
     - name: Send deployment failure notification
       if: inputs.type == 'deployment-failure'
       uses: slackapi/slack-github-action@v2
@@ -311,6 +437,34 @@ runs:
             "channel": "${{ inputs.channel }}",
             "thread_ts": "${{ inputs.thread-ts }}",
             "text": "❌ Deployment to ${{ inputs.environment }} failed!"
+          }
+
+    - name: Remove in-progress reaction from original post
+      if: inputs.type == 'deployment-failure'
+      uses: slackapi/slack-github-action@v2
+      with:
+        method: reactions.remove
+        token: ${{ inputs.slack-bot-token }}
+        errors: true
+        payload: |
+          {
+            "channel": "${{ inputs.channel }}",
+            "timestamp": "${{ inputs.thread-ts }}",
+            "name": "hourglass_flowing_sand"
+          }
+
+    - name: Add failure reaction to original post
+      if: inputs.type == 'deployment-failure'
+      uses: slackapi/slack-github-action@v2
+      with:
+        method: reactions.add
+        token: ${{ inputs.slack-bot-token }}
+        errors: true
+        payload: |
+          {
+            "channel": "${{ inputs.channel }}",
+            "timestamp": "${{ inputs.thread-ts }}",
+            "name": "x"
           }
 
     - name: Send staging deployment notification
@@ -338,7 +492,7 @@ runs:
                 "fields": [
                   {
                     "type": "mrkdwn",
-                    "text": "*Repository:*\n${{ inputs.repository }}"
+                    "text": "*Repository:*\n${{ steps.repo-name.outputs.name }}"
                   },
                   {
                     "type": "mrkdwn",
@@ -359,6 +513,13 @@ runs:
                 "text": {
                   "type": "mrkdwn",
                   "text": "*Recent Changes:*\n${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}"
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Contributors:*\n${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}"
                 }
               },
               {
