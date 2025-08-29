@@ -230,7 +230,7 @@ runs:
         COMMITS=$(curl -s -H "Authorization: token ${{ inputs.github-token }}" \
           "https://api.github.com/repos/${{ inputs.repository }}/commits?sha=${{ inputs.branch }}&per_page=5")
         
-        # Format commits into readable notes with links
+        # Format commits into readable notes with links (ensure proper line breaks)
         COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"' | head -5)
         
         # Get contributors from recent commits
@@ -540,14 +540,14 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Recent Changes:*\n${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}"
+                  "text": "*Recent Changes & Contributors:*"
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*Contributors:*\n${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}"
+                  "text": "```${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}\n\nContributors: ${{ steps.staging-notes.outputs.contributors || 'No contributors found' }}```"
                 }
               },
               {
