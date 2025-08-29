@@ -273,19 +273,8 @@ runs:
           done
         fi
         
-        # Clean up line endings and debug
-        echo "DEBUG: Raw commit notes length: ${#COMMIT_NOTES}"
-        echo "DEBUG: First 100 chars of commit notes: ${COMMIT_NOTES:0:100}"
-        
-        # Aggressive cleanup of problematic characters
-        CLEAN_NOTES=$(echo "$COMMIT_NOTES" | tr -d '\r\n' | tr '\n' ' ')
-        if [ -z "$CLEAN_NOTES" ]; then
-          CLEAN_NOTES="No commit information available"
-        fi
-        
-        echo "DEBUG: Clean notes: $CLEAN_NOTES"
         echo "notes<<EOF" >> $GITHUB_OUTPUT
-        echo "$CLEAN_NOTES" >> $GITHUB_OUTPUT
+        echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         echo "contributors=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
 
@@ -294,11 +283,15 @@ runs:
       id: format-notes
       shell: bash
       run: |
-        NOTES='${{ steps.auto-release.outputs.body }}'
+        # Use cat with EOF to avoid quote issues
+        NOTES=$(cat <<'END_OF_NOTES'
+        ${{ steps.auto-release.outputs.body }}
+        END_OF_NOTES
+        )
         
         # Convert markdown to Slack format
-        # Preserve line breaks first
-        FORMATTED_NOTES=$(echo "$NOTES" | sed 's/$/\n/g' | tr -d '\000')
+        # Clean up line endings and preserve line breaks
+        FORMATTED_NOTES=$(echo "$NOTES" | tr -d '\r' | sed 's/$/\n/g' | tr -d '\000')
         # Convert **bold** to *bold* (Slack uses single asterisks for bold)
         FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/\*\*\([^*]*\)\*\*/\*\1\*/g')
         # Convert _italic_ to _italic_ (keep as is)
