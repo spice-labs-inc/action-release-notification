@@ -38,6 +38,9 @@ inputs:
   environment:
     description: 'Deployment environment (e.g. production, staging) - required for deployment types'
     required: false
+  thread-ts:
+    description: 'Timestamp of message to reply to (for threading deployment updates to release messages)'
+    required: false
     
   # Staging notification inputs
   commit-message:
@@ -190,6 +193,7 @@ runs:
 
     - name: Send release notification
       if: inputs.type == 'release'
+      id: slack-release
       uses: slackapi/slack-github-action@v2
       with:
         method: chat.postMessage
@@ -261,50 +265,8 @@ runs:
         payload: |
           {
             "channel": "${{ inputs.channel }}",
-            "text": "Deployment Successful: ${{ inputs.environment }}",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "✅ *Deployment Successful*"
-                }
-              },
-              {
-                "type": "section",
-                "fields": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Repository:*\n${{ inputs.repository }}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Environment:*\n`${{ inputs.environment }}`"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Workflow:*\n${{ inputs.workflow-name }}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Deployed by:*\n${{ steps.map-user.outputs.slack-mention }}"
-                  }
-                ]
-              },
-              {
-                "type": "actions",
-                "elements": [
-                  {
-                    "type": "button",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "View Workflow"
-                    },
-                    "url": "${{ steps.workflow-url.outputs.url }}"
-                  }
-                ]
-              }
-            ]
+            "thread_ts": "${{ inputs.thread-ts }}",
+            "text": "✅ Deployment to ${{ inputs.environment }} successful!"
           }
 
     - name: Send deployment failure notification
@@ -317,52 +279,8 @@ runs:
         payload: |
           {
             "channel": "${{ inputs.channel }}",
-            "text": "Deployment Failed: ${{ inputs.environment }}",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "❌ *Deployment Failed*"
-                }
-              },
-              {
-                "type": "section",
-                "fields": [
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Repository:*\n${{ inputs.repository }}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Environment:*\n`${{ inputs.environment }}`"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Workflow:*\n${{ inputs.workflow-name }}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Failed for:*\n${{ steps.map-user.outputs.slack-mention }}"
-                  }
-                ]
-              },
-              {
-                "type": "actions",
-                "elements": [
-                  {
-                    "type": "button",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "View Failed Workflow",
-                      "emoji": true
-                    },
-                    "url": "${{ steps.workflow-url.outputs.url }}",
-                    "style": "danger"
-                  }
-                ]
-              }
-            ]
+            "thread_ts": "${{ inputs.thread-ts }}",
+            "text": "❌ Deployment to ${{ inputs.environment }} failed!"
           }
 
     - name: Send staging deployment notification
