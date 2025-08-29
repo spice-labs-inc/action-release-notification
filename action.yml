@@ -547,7 +547,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "```${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}```"
+                  "text": "${{ steps.staging-notes.outputs.notes || inputs.commit-message || 'No recent changes available' }}"
                 }
               },
               {
