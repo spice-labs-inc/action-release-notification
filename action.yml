@@ -180,11 +180,11 @@ runs:
         NOTES='${{ steps.auto-release.outputs.body }}'
         
         # Convert markdown to Slack format
-        # Convert **bold** to *bold*
-        FORMATTED_NOTES=$(echo "$NOTES" | sed 's/\*\*\([^*]*\)\*\*/\*\1\*/g')
-        # Convert _italic_ and *italic* to _italic_
-        FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/\*\([^*]*\)\*/_\1_/g')
-        # Convert `code` to `code` (already correct)
+        # Preserve line breaks first
+        FORMATTED_NOTES=$(echo "$NOTES" | sed 's/$/\n/g' | tr -d '\000')
+        # Convert **bold** to *bold* (Slack uses single asterisks for bold)
+        FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/\*\*\([^*]*\)\*\*/\*\1\*/g')
+        # Convert _italic_ to _italic_ (keep as is)
         # Convert [link](url) to <url|link>
         FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/\[\([^]]*\)\](\([^)]*\))/<\2|\1>/g')
         # Convert GitHub @mentions to Slack mentions
@@ -263,12 +263,15 @@ runs:
             ]
           }
 
-    - name: Debug release message timestamp
+    - name: Extract and set timestamp
       if: inputs.type == 'release'
+      id: extract-ts
       shell: bash
       run: |
-        echo "Release message timestamp: ${{ steps.slack-release.outputs.ts }}"
-        echo "Full response: ${{ steps.slack-release.outputs.response }}"
+        RESPONSE='${{ steps.slack-release.outputs.response }}'
+        TIMESTAMP=$(echo "$RESPONSE" | jq -r '.ts')
+        echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+        echo "Release message timestamp: $TIMESTAMP"
 
     - name: Debug deployment threading
       if: inputs.type == 'deployment-success' || inputs.type == 'deployment-failure'
