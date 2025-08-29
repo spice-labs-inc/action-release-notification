@@ -233,32 +233,14 @@ runs:
         if [ "$PUSH_COMMITS" != "null" ] && [ "$PUSH_COMMITS" != "[]" ]; then
           echo "Using commits from current push event"
           COMMITS="$PUSH_COMMITS"
-          # Format with GitHub links, ensuring proper newlines
-          COMMIT_NOTES=""
-          while IFS= read -r line; do
-            if [ -n "$line" ]; then
-              if [ -n "$COMMIT_NOTES" ]; then
-                COMMIT_NOTES="$COMMIT_NOTES"$'\n'"$line"
-              else
-                COMMIT_NOTES="$line"
-              fi
-            fi
-          done < <(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .id + "|" + .message + ">"')
+          # Format with GitHub links - let jq handle the formatting naturally
+          COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .id + "|" + .message + ">"')
         else
           echo "Falling back to recent commits"
           COMMITS=$(curl -s -H "Authorization: token ${{ inputs.github-token }}" \
             "https://api.github.com/repos/${{ inputs.repository }}/commits?sha=${{ inputs.branch }}&per_page=5")
-          # Format with GitHub links, ensuring proper newlines
-          COMMIT_NOTES=""
-          while IFS= read -r line; do
-            if [ -n "$line" ]; then
-              if [ -n "$COMMIT_NOTES" ]; then
-                COMMIT_NOTES="$COMMIT_NOTES"$'\n'"$line"
-              else
-                COMMIT_NOTES="$line"
-              fi
-            fi
-          done < <(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"')
+          # Format with GitHub links - let jq handle the formatting naturally
+          COMMIT_NOTES=$(echo "$COMMITS" | jq -r --arg repo "${{ inputs.repository }}" '.[] | "• <https://github.com/" + $repo + "/commit/" + .sha + "|" + .commit.message + ">"')
         fi
         
         # Get contributors from commits (handle different JSON structures)
@@ -291,18 +273,9 @@ runs:
           done
         fi
         
-        # Instead of multiline notes, create individual commit lines for better Slack formatting
-        COMMIT_LIST=""
-        if [ -n "$COMMIT_NOTES" ]; then
-          # Convert to JSON array of individual commits for Slack blocks
-          COMMIT_JSON=$(echo "$COMMITS" | jq --arg repo "${{ inputs.repository }}" '[.[] | "• <https://github.com/" + $repo + "/commit/" + (if has("id") then .id else .sha end) + "|" + (if has("message") then .message else .commit.message end) + ">"]')
-          COMMIT_LIST="$COMMIT_JSON"
-        fi
-        
         echo "notes<<EOF" >> $GITHUB_OUTPUT
         echo "$COMMIT_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
-        echo "commit_list=$COMMIT_LIST" >> $GITHUB_OUTPUT
         echo "contributors=$SLACK_MENTIONS" >> $GITHUB_OUTPUT
 
     - name: Format release notes
