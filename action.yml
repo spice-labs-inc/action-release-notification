@@ -30,6 +30,10 @@ inputs:
   github-token:
     description: 'GitHub token for API access - required for auto-generation'
     required: false
+  show-progress:
+    description: 'Add hourglass reaction to release post to indicate in-progress deployment'
+    required: false
+    default: 'true'
     
   # Deployment notification inputs
   workflow-name:
@@ -67,7 +71,7 @@ inputs:
     required: false
     default: ${{ github.ref_name }}
   commit-sha:
-    description: 'Commit SHA (short version recommended)'
+    description: 'Commit SHA (long version recommended)'
     required: false
 
 outputs:
@@ -362,7 +366,11 @@ runs:
                   },
                   {
                     "type": "mrkdwn",
-                    "text": "*Branch:*\n`${{ inputs.branch }}`"
+                    "text": "*Tag:*\n`${{ inputs.branch }}`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "SHA: `${{ inputs.commit-sha || github.sha }}`"
                   }
                 ]
               },
@@ -414,7 +422,7 @@ runs:
         echo "Channel ID: $CHANNEL_ID"
 
     - name: Add hourglass reaction to release post
-      if: inputs.type == 'release'
+      if: inputs.type == 'release' && inputs.show-progress == 'true'
       uses: slackapi/slack-github-action@v2
       continue-on-error: true
       with:
