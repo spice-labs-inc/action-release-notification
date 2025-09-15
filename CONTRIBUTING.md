@@ -40,7 +40,6 @@ Follow the coding style used in the project:
    git commit -m "Handle timeouts in API client with retries with backoff"
    git push origin fix/handle-timeouts
    ```
-
 - Longer commit messages are welcome, describing the approach, alternatives considered, or useful explanations of the change.
 - Please make your commits as focused as possible. It is better to have two smaller commits for unrelated changes than a combined commit with a vague title such as "updates" or "changes."
 
