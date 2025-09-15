@@ -1,6 +1,6 @@
 ## Contributing to This Project
 
-Thank you for your interest in contributing. We welcome all kinds of contributions: code, documentation, bug reports, feature requests, and more. This guide will help you get started. We ask that you engage with good faith, honesty, and integrity, and respect that the maintainers make the final decisions on this project.
+Thank you for your interest in this project. We welcome all kinds of contributions: code, documentation, bug reports, feature requests, and more. This guide will help you get started. We ask that you engage in good faith, honesty, and integrity, and respect that the maintainers make the final decisions on this project.
 
 ---
 
@@ -19,7 +19,7 @@ Open a [new issue](../../issues/new) to report the problem.
 
 ### Suggesting Features
 
-Include as best you can:
+Please include:
 - A summary of the problem you are trying to solve
 - Why it is important or useful
 - A rough idea of how it could be implemented
@@ -31,34 +31,34 @@ Open a [new issue](../../issues/new) to make the suggestion.
 ### Making Code Contributions
 
 Follow the coding style used in the project:
-- The project has linters and formatters configured, so use them.
-- Add or update tests if you change features or handle new cases.
-- Run existing tests to ensure everything still works.
-- Write clear commit messages that describe what the changes in the commit are:
+- The project has linters and formatters configured, so use them
+- Add or update tests if you change features or handle new cases
+- Run existing tests to ensure everything still works
+- Write clear commit messages that describe the changes:
 
    ```bash
-   git commit -m "Handle timeouts in API client with retries with backoff"
+   git commit -m "Handle timeouts in API client with retry backoff"
    git push origin fix/handle-timeouts
    ```
-- Longer commit messages are welcome, describing the approach, alternatives considered, or useful explanations of the change.
-- Please make your commits as focused as possible. It is better to have two smaller commits for unrelated changes than a combined commit with a vague title such as "updates" or "changes."
+- Longer commit messages are welcome when describing the approach, alternatives considered, or other useful details
+- Please keep commits as focused as possible. It is better to have two smaller commits for unrelated changes than one combined commit with a vague title such as "updates" or "changes"
 
 ---
 
 ### Tests and CI
 
-- Please run the tests and linters against your changes.
-- Please reach out if you are unsure how to run the tests.
+- Run the tests and linters against your changes
+- Reach out if you are unsure how to run the tests
 
 ---
 
 ### Opening a Pull Request
 
-- Open your pull request against the `next` branch. We integrate changes into `next` before cutting releases to `main` and to tagged releases.
-- Write a good pull request, using the template given as a guide. Explain why you are making changes as clearly as you can.
-- Link to any related issues.
-- Be ready to discuss or make changes after review.
-- Please check that CI passes on your PR, and make any changes required.
+- Open your pull request against the `next` branch. We integrate changes into `next` before cutting releases to `main` and creating tagged releases
+- Use the pull request template as a guide. Explain why you are making changes as clearly as you can
+- Link to any related issues
+- Be ready to discuss or make changes after review
+- Ensure CI passes on your PR and make any required changes
 
 ---
 
@@ -81,10 +81,8 @@ All contributions must be compatible with the project’s [license](LICENSE.txt)
 
 ### Thank You!
 
-Thank you for contributing. Whether you are fixing a typo, suggesting a feature, or rewriting a core component, your contribution matters.  
+Thank you for contributing. Whether you are fixing a typo, suggesting a feature, or rewriting a core component, your contribution helps and is greatly appreciated.  
 
-For questions, feel free to open an issue or start a discussion.  
-
-Community discussions for Spice Labs open source projects are on Matrix at https://matrix.to/#/#spice-labs:matrix.org
+For questions, feel free to open an issue or start a discussion. Community discussions for Spice Labs open source projects are on Matrix at https://matrix.to/#/#spice-labs:matrix.org
 
 ---
