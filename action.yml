@@ -124,7 +124,7 @@ runs:
         fi
         
         # Format for Slack mention if it's a Slack user ID (starts with U and 11 chars total)
-        if [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
+        if [[ $SLACK_USER =~ ^U[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]$ ]]; then
           echo "slack-mention=<@$SLACK_USER>" >> $GITHUB_OUTPUT
         else
           echo "slack-mention=@$SLACK_USER" >> $GITHUB_OUTPUT
@@ -202,7 +202,7 @@ runs:
             fi
             
             # Format for Slack mention
-            if [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
+            if [[ $SLACK_USER =~ ^U[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]$ ]]; then
               SLACK_MENTIONS="$SLACK_MENTIONS <@$SLACK_USER>"
             else
               SLACK_MENTIONS="$SLACK_MENTIONS @$SLACK_USER"
@@ -269,7 +269,7 @@ runs:
             fi
             
             # Format for Slack mention
-            if [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
+            if [[ $SLACK_USER =~ ^U[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]$ ]]; then
               SLACK_MENTIONS="$SLACK_MENTIONS <@$SLACK_USER>"
             else
               SLACK_MENTIONS="$SLACK_MENTIONS @$SLACK_USER"
@@ -308,7 +308,7 @@ runs:
           GITHUB_USERS=$(echo "$FORMATTED_NOTES" | grep -oE '@[a-zA-Z0-9_-]+' | sed 's/@//' | sort -u)
           for github_user in $GITHUB_USERS; do
             SLACK_USER=$(echo "$MAPPING" | jq -r --arg user "$github_user" '.[$user] // empty')
-            if [ -n "$SLACK_USER" ] && [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
+            if [ -n "$SLACK_USER" ] && [[ $SLACK_USER =~ ^U[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]$ ]]; then
               # Replace with proper Slack mention
               FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed "s/@$github_user/<@$SLACK_USER>/g")
             else
