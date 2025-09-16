@@ -321,9 +321,17 @@ runs:
           FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/@\([a-zA-Z0-9_-]*\)/`@\1`/g')
         fi
         
-        # Truncate if too long (Slack has limits)
-        if [ ${#FORMATTED_NOTES} -gt 1500 ]; then
-          FORMATTED_NOTES="${FORMATTED_NOTES:0:1497}..."
+        # Debug: Check what's in FORMATTED_NOTES before parameter expansion
+        echo "DEBUG: FORMATTED_NOTES content:"
+        echo "$FORMATTED_NOTES" | head -5
+        echo "DEBUG: First 100 chars: ${FORMATTED_NOTES:0:100}"
+        echo "DEBUG: Attempting length check..."
+        
+        # Truncate if too long (Slack has limits) - use alternative approach
+        NOTE_LENGTH=$(echo "$FORMATTED_NOTES" | wc -c)
+        if [ "$NOTE_LENGTH" -gt 1500 ]; then
+          FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | head -c 1497)
+          FORMATTED_NOTES="$FORMATTED_NOTES..."
         fi
         
         echo "formatted<<EOF" >> $GITHUB_OUTPUT
