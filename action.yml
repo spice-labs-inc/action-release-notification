@@ -287,11 +287,19 @@ runs:
       id: format-notes
       shell: bash
       run: |
+        # Enable comprehensive error handling
+        set -euo pipefail
+        trap 'echo "ERROR: Command failed at line $LINENO: $BASH_COMMAND" >&2; exit 1' ERR
+        
+        echo "DEBUG: Starting format-notes step"
+        
         # Use cat with EOF to avoid quote issues
         NOTES=$(cat <<'END_OF_NOTES'
         ${{ steps.auto-release.outputs.body }}
         END_OF_NOTES
         )
+        
+        echo "DEBUG: Successfully captured release notes"
         
         # Convert markdown to Slack format
         # Clean up line endings and preserve line breaks
@@ -321,10 +329,19 @@ runs:
           FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/@\([a-zA-Z0-9_-]*\)/`@\1`/g')
         fi
         
-        # Truncate if too long (Slack has limits)
-        if [ ${#FORMATTED_NOTES} -gt 1500 ]; then
-          FORMATTED_NOTES="${FORMATTED_NOTES:0:1497}..."
+        echo "DEBUG: About to check note length"
+        
+        # Truncate if too long (Slack has limits) - use alternative approach to avoid GitHub secret masking
+        NOTE_LENGTH=$(echo "$FORMATTED_NOTES" | wc -c)
+        echo "DEBUG: Note length is $NOTE_LENGTH characters"
+        
+        if [ "$NOTE_LENGTH" -gt 1500 ]; then
+          echo "DEBUG: Truncating notes to fit Slack limits"
+          FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | head -c 1497)
+          FORMATTED_NOTES="$FORMATTED_NOTES..."
         fi
+        
+        echo "DEBUG: Note formatting completed successfully"
         
         echo "formatted<<EOF" >> $GITHUB_OUTPUT
         echo "$FORMATTED_NOTES" >> $GITHUB_OUTPUT
@@ -334,8 +351,15 @@ runs:
       id: repo-name
       shell: bash
       run: |
+        set -euo pipefail
+        trap 'echo "ERROR: Command failed at line $LINENO: $BASH_COMMAND" >&2; exit 1' ERR
+        
+        echo "DEBUG: Starting extract repository name step"
+        echo "DEBUG: Repository input: '${{ inputs.repository }}'"
         REPO_NAME=$(echo "${{ inputs.repository }}" | cut -d'/' -f2)
+        echo "DEBUG: Extracted repo name: '$REPO_NAME'"
         echo "name=$REPO_NAME" >> $GITHUB_OUTPUT
+        echo "DEBUG: Extract repository name step completed successfully"
 
     - name: Send release notification
       if: inputs.type == 'release'
