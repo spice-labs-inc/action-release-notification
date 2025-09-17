@@ -334,7 +334,8 @@ runs:
         
         # Debug: Print output summary
         echo "DEBUG: Format notes step completed successfully"
-        echo "DEBUG: FORMATTED_NOTES length: $(echo "$FORMATTED_NOTES" | wc -c)"
+        echo "DEBUG: FORMATTED_NOTES length: $NOTE_LENGTH"
+        echo "DEBUG: Final debug line reached"
 
     - name: Extract repository name
       id: repo-name
