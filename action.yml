@@ -287,6 +287,10 @@ runs:
       id: format-notes
       shell: bash
       run: |
+        # Enable comprehensive error handling
+        set -euo pipefail
+        trap 'echo "ERROR: Command failed at line $LINENO: $BASH_COMMAND" >&2; exit 1' ERR
+        
         # Use cat with EOF to avoid quote issues
         NOTES=$(cat <<'END_OF_NOTES'
         ${{ steps.auto-release.outputs.body }}
@@ -305,7 +309,7 @@ runs:
         MAPPING='${{ inputs.username-mapping }}'
         if [ -n "$MAPPING" ] && [ "$MAPPING" != "{}" ]; then
           # Extract GitHub usernames and replace with Slack mentions
-          GITHUB_USERS=$(echo "$FORMATTED_NOTES" | grep -oE '@[a-zA-Z0-9_-]+' | sed 's/@//' | sort -u)
+          GITHUB_USERS=$(echo "$FORMATTED_NOTES" | grep -oE '@[a-zA-Z0-9_-]+' | sed 's/@//' | sort -u || true)
           for github_user in $GITHUB_USERS; do
             SLACK_USER=$(echo "$MAPPING" | jq -r --arg user "$github_user" '.[$user] // empty')
             if [ -n "$SLACK_USER" ] && [[ $SLACK_USER =~ ^U[A-Z0-9]{10}$ ]]; then
@@ -321,9 +325,11 @@ runs:
           FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | sed 's/@\([a-zA-Z0-9_-]*\)/`@\1`/g')
         fi
         
-        # Truncate if too long (Slack has limits)
-        if [ ${#FORMATTED_NOTES} -gt 1500 ]; then
-          FORMATTED_NOTES="${FORMATTED_NOTES:0:1497}..."
+        # Truncate if too long (Slack has limits) - use alternative approach to avoid GitHub secret masking
+        NOTE_LENGTH=$(echo "$FORMATTED_NOTES" | wc -c)
+        if [ "$NOTE_LENGTH" -gt 1500 ]; then
+          FORMATTED_NOTES=$(echo "$FORMATTED_NOTES" | head -c 1497)
+          FORMATTED_NOTES="$FORMATTED_NOTES..."
         fi
         
         echo "formatted<<EOF" >> $GITHUB_OUTPUT
@@ -334,6 +340,9 @@ runs:
       id: repo-name
       shell: bash
       run: |
+        set -euo pipefail
+        trap 'echo "ERROR: Command failed at line $LINENO: $BASH_COMMAND" >&2; exit 1' ERR
+        
         REPO_NAME=$(echo "${{ inputs.repository }}" | cut -d'/' -f2)
         echo "name=$REPO_NAME" >> $GITHUB_OUTPUT
 
