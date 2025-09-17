@@ -331,13 +331,21 @@ runs:
         echo "formatted<<EOF" >> $GITHUB_OUTPUT
         echo "$FORMATTED_NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
+        
+        # Debug: Print output summary
+        echo "DEBUG: Format notes step completed successfully"
+        echo "DEBUG: FORMATTED_NOTES length: $(echo "$FORMATTED_NOTES" | wc -c)"
 
     - name: Extract repository name
       id: repo-name
       shell: bash
       run: |
+        echo "DEBUG: Extract repository name step starting"
+        echo "DEBUG: Repository input: '${{ inputs.repository }}'"
         REPO_NAME=$(echo "${{ inputs.repository }}" | cut -d'/' -f2)
+        echo "DEBUG: Extracted repo name: '$REPO_NAME'"
         echo "name=$REPO_NAME" >> $GITHUB_OUTPUT
+        echo "DEBUG: Extract repository name step completed successfully"
 
     - name: Send release notification
       if: inputs.type == 'release'
