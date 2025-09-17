@@ -328,9 +328,9 @@ runs:
           FORMATTED_NOTES="$FORMATTED_NOTES..."
         fi
         
-        echo "formatted<<EOF" >> $GITHUB_OUTPUT
-        echo "$FORMATTED_NOTES" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        # Use a simple string output instead of EOF format to avoid issues
+        FORMATTED_NOTES_ESCAPED=$(echo "$FORMATTED_NOTES" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | tr '\n' ' ')
+        echo "formatted=$FORMATTED_NOTES_ESCAPED" >> $GITHUB_OUTPUT
         
         # Debug: Print output summary
         echo "DEBUG: Format notes step completed successfully"
