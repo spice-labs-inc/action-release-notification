@@ -333,7 +333,7 @@ runs:
         fi
         
         echo "formatted<<EOF" >> $GITHUB_OUTPUT
-        echo "$FORMATTED_NOTES" >> $GITHUB_OUTPUT
+        echo '```'"$FORMATTED_NOTES"'```' | jq -Rsa . >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
     - name: Extract repository name
@@ -394,7 +394,7 @@ runs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "```${{ steps.format-notes.outputs.formatted }}```"
+                  "text": ${{ steps.format-notes.outputs.formatted }}
                 }
               },
               {
