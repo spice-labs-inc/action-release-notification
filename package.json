@@ -1,0 +1,18 @@
+{
+    "name": "action-release-notification",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "prepare": "esbuild --bundle src/notify.ts --outdir=dist --format=esm --platform=node --main-fields=module,main --banner:js=\"import { createRequire } from 'module';\nconst require = createRequire(import.meta.url);\" --target=node24"
+    },
+    "devDependencies": {
+        "@types/node": "^24.9.1",
+        "esbuild": "^0.25.11",
+        "typescript": "^5.9.3"
+    },
+    "dependencies": {
+        "@actions/core": "^1.11.1",
+        "@actions/github": "^6.0.1",
+        "@slack/web-api": "^7.12.0"
+    }
+}

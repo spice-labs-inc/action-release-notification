@@ -1,4 +1,4 @@
-# Example workflow for deployment notifications  
+# Example workflow for deployment notifications
 # Place this in .github/workflows/deploy-production.yml in your consuming repository
 
 name: Deploy to Production
@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Deploy to production
         id: deploy
         run: |
@@ -31,7 +31,7 @@ jobs:
           type: deployment-success
           slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
           channel: "#deployments"
-          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
+          username-mapping: ${{ vars.GITHUB_SLACK_USERNAME_MAPPING }}
           workflow-name: ${{ github.workflow }}
           environment: production
           workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -43,7 +43,8 @@ jobs:
           type: deployment-failure
           slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
           channel: "#deployments"
-          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
+          username-mapping: ${{ vars.GITHUB_SLACK_USERNAME_MAPPING }}
           workflow-name: ${{ github.workflow }}
           environment: production
           workflow-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+

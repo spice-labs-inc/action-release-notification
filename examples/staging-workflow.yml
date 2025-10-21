@@ -33,9 +33,10 @@ jobs:
           type: staging
           slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
           channel: "#staging"
-          username-mapping: ${{ secrets.GITHUB_SLACK_USERNAME_MAPPING }}
-          github-token: ${{ github.token }}  # Enables auto-generated recent commits
+          username-mapping: ${{ vars.GITHUB_SLACK_USERNAME_MAPPING }}
+          github-token: ${{ github.token }} # Enables auto-generated recent commits
           environment: staging
           commit-sha: ${{ steps.commit.outputs.short_sha }}
           staging-url: "https://staging.yourdomain.com"
           # commit-message will be auto-generated from recent commits if not provided
+
