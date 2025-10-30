@@ -1,0 +1,59 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - "branch-to-run-tests-on"
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "type: staging"
+        if: always() # for testing
+        uses: spice-labs-inc/action-release-notification@branch-to-run-tests-on
+        with:
+          type: staging
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          username-mapping: ${{ vars.GH_SLACK_USERNAME_MAPPING }}
+          github-token: ${{ github.token }}
+          channel: "#bot-testing"
+          environment: testing
+          staging-url: "https://example.org/"
+
+      - name: "type: release"
+        id: release
+        if: always() # for testing
+        uses: spice-labs-inc/action-release-notification@branch-to-run-tests-on
+        with:
+          type: release
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          username-mapping: ${{ vars.GH_SLACK_USERNAME_MAPPING }}
+          github-token: ${{ github.token }}
+          channel: "#bot-testing"
+          # No need to specify release-tag, release-name, release-notes, or release-url
+          # They'll be auto-generated from the GitHub release
+
+      - name: "type: deployment-success"
+        if: always() # for testing; in practice, success()
+        uses: spice-labs-inc/action-release-notification@branch-to-run-tests-on
+        with:
+          type: deployment-success
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          username-mapping: ${{ vars.GH_SLACK_USERNAME_MAPPING }}
+          github-token: ${{ github.token }}
+          channel-id: ${{ steps.release.outputs.channel-id }}
+          thread-ts: ${{ steps.release.outputs.thread-ts }}
+          environment: testing
+
+      - name: "type: deployment-failure"
+        if: always() # for testing, in practice, failure()
+        uses: spice-labs-inc/action-release-notification@branch-to-run-tests-on
+        with:
+          type: deployment-failure
+          slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+          username-mapping: ${{ vars.GH_SLACK_USERNAME_MAPPING }}
+          github-token: ${{ github.token }}
+          channel-id: ${{ steps.release.outputs.channel-id }}
+          thread-ts: ${{ steps.release.outputs.thread-ts }}
+          environment: testing
