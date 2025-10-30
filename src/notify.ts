@@ -152,7 +152,7 @@ try {
 
     // Send staging deployment notification
     await slack.chat.postMessage(
-      messageForDeploymentNotification({
+      messageForStagingNotification({
         slack_mention,
         notes,
         contributors,
@@ -235,7 +235,7 @@ try {
   throw error;
 }
 
-function messageForDeploymentNotification(inputs: {
+function messageForStagingNotification(inputs: {
   slack_mention: string;
   notes: string;
   contributors: Set<GithubUsername>;
@@ -279,19 +279,23 @@ function messageForDeploymentNotification(inputs: {
           { type: "mrkdwn", text: `Commit: \`${commit_sha}\`` },
         ],
       },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "View Staging",
-            },
-            url: staging_url,
-          },
-        ],
-      },
+      ...(staging_url
+        ? [
+            {
+              type: "actions",
+              elements: [
+                {
+                  type: "button",
+                  text: {
+                    type: "plain_text",
+                    text: "View Staging",
+                  },
+                  url: staging_url,
+                },
+              ],
+            } satisfies KnownBlock,
+          ]
+        : []),
     ],
   };
   return R;
