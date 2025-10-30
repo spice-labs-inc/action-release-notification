@@ -43027,7 +43027,7 @@ try {
       )
     );
     await slack.chat.postMessage(
-      messageForDeploymentNotification({
+      messageForStagingNotification({
         slack_mention,
         notes,
         contributors
@@ -43098,7 +43098,7 @@ try {
   throw error2;
 }
 var replaceSpecialChars2;
-function messageForDeploymentNotification(inputs) {
+function messageForStagingNotification(inputs) {
   const environment = (0, import_core.getInput)("environment") || "staging";
   const channel = (0, import_core.getInput)("channel");
   const staging_url = (0, import_core.getInput)("staging-url");
@@ -43142,19 +43142,21 @@ ${Array.from(inputs.contributors).map(formatMention).join(" ") || "No contributo
           { type: "mrkdwn", text: `Commit: \`${commit_sha}\`` }
         ]
       },
-      {
-        type: "actions",
-        elements: [
-          {
-            type: "button",
-            text: {
-              type: "plain_text",
-              text: "View Staging"
-            },
-            url: staging_url
-          }
-        ]
-      }
+      ...staging_url ? [
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              text: {
+                type: "plain_text",
+                text: "View Staging"
+              },
+              url: staging_url
+            }
+          ]
+        }
+      ] : []
     ]
   };
   return R;
