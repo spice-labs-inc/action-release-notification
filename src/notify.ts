@@ -47,7 +47,6 @@ const octokit = getOctokit(github_token);
 const workflow_url = `https://github.com/${getInput("repository")}/actions/runs/${context.runId}`;
 
 try {
-  let notes: string = "";
   let contributors = new Set<GithubUsername>();
   const mentions: SlackMention[] = [];
 
@@ -66,7 +65,7 @@ try {
         }));
     const current_tag = release_info.data.tag_name;
     const name = release_info.data.name || current_tag;
-    notes = release_info.data.body || "";
+    const notes = release_info.data.body || "";
     const url = release_info.data.html_url;
 
     const releases = await octokit.rest.repos.listReleases({
@@ -128,10 +127,10 @@ try {
             per_page: 5,
           })).data.map((c) => c.commit);
     // Format with GitHub links - clean up commit messages for Slack
-    notes = commits
+    const notes = commits
       .map(
         (e) =>
-          `• <https://github.com/${owner}/${repo}/commit/${"id" in e ? e.id : e.tree.sha}|${replaceSpecialChars(e.message)}>`,
+          `- [${replaceSpecialChars(e.message.split("\n")[0]!)}](https://github.com/${owner}/${repo}/commit/${"id" in e ? e.id : e.tree.sha})`,
       )
       .join("\n");
 

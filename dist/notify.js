@@ -42952,7 +42952,6 @@ var github_token = (0, import_core.getInput)("github-token") || error("'github-t
 var octokit = (0, import_github.getOctokit)(github_token);
 var workflow_url = `https://github.com/${(0, import_core.getInput)("repository")}/actions/runs/${import_github.context.runId}`;
 try {
-  let notes = "";
   let contributors = /* @__PURE__ */ new Set();
   const mentions = [];
   if (type === "release") {
@@ -42970,7 +42969,7 @@ try {
     ));
     const current_tag = release_info.data.tag_name;
     const name = release_info.data.name || current_tag;
-    notes = release_info.data.body || "";
+    const notes = release_info.data.body || "";
     const url = release_info.data.html_url;
     const releases = await octokit.rest.repos.listReleases({
       owner,
@@ -43018,8 +43017,8 @@ try {
       repo,
       per_page: 5
     })).data.map((c) => c.commit);
-    notes = commits.map(
-      (e) => `\u2022 <https://github.com/${owner}/${repo}/commit/${"id" in e ? e.id : e.tree.sha}|${replaceSpecialChars(e.message)}>`
+    const notes = commits.map(
+      (e) => `- [${replaceSpecialChars(e.message.split("\n")[0])}](https://github.com/${owner}/${repo}/commit/${"id" in e ? e.id : e.tree.sha})`
     ).join("\n");
     contributors = new Set(
       commits.map(
