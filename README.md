@@ -19,10 +19,12 @@ Standardized GitHub Action for sending release, deployment, and staging notifica
 
 #### Release notifications
 ```yaml
-- uses: spice-labs-inc/action-release-notification@v1
+- uses: spice-labs-inc/action-release-notification@v3
   with:
     type: release
     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+    username-mapping: ${{ vars.GH_SLACK_USERNAME_MAPPING }}
+    github-token: ${{ github.token }}
     channel: "#releases"
     release-tag: ${{ github.event.release.tag_name }}
     release-name: ${{ github.event.release.name }}
@@ -31,21 +33,24 @@ Standardized GitHub Action for sending release, deployment, and staging notifica
 
 #### Deployment success/failure
 ```yaml
-- uses: spice-labs-inc/action-release-notification@v1
+- uses: spice-labs-inc/action-release-notification@v3
   with:
     type: deployment-success  # or deployment-failure
     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+    username-mapping: ${{ vars.GH_SLACK_USERNAME_MAPPING }}
+    github-token: ${{ github.token }}
     channel: "#deployments"
-    workflow-name: ${{ github.workflow }}
     environment: production
 ```
 
 #### Staging updates
 ```yaml
-- uses: spice-labs-inc/action-release-notification@v1
+- uses: spice-labs-inc/action-release-notification@v3
   with:
     type: staging
     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+    username-mapping: ${{ vars.GH_SLACK_USERNAME_MAPPING }}
+    github-token: ${{ github.token }}
     channel: "#staging"
     commit-message: ${{ github.event.head_commit.message }}
     staging-url: "https://staging.yourdomain.com"
