@@ -408,7 +408,7 @@ function formatBody(s: string): KnownBlock[] {
         // Convert **bold** to *bold* (Slack uses single asterisks for bold)
         .replaceAll(/\*\*([^*]*)\*\*/g, "*$1*")
         // Convert [link](url) to <url|link>
-        .replaceAll(/\[([^]]*)\]\(([^)]*)\)/g, "<$2|$1>")
+        .replaceAll(/\[([^\]]*)\]\(([^)]*)\)/g, "<$2|$1>")
         // Shorten links that are within-repo
         .replaceAll(
           new RegExp(`\\b${repoUrl}(pull|issue)/([0-9]+)\\b`, "g"),

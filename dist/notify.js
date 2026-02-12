@@ -43213,7 +43213,7 @@ function formatBody(s) {
       out.push(last);
     }
     const repoUrl = `https://github.com/${owner}/${repo}/`;
-    last.text.text += e.replaceAll(/^#+ +(.*) *$/g, "*$1*").replaceAll(/\*\*([^*]*)\*\*/g, "*$1*").replaceAll(/\[([^]]*)\]\(([^)]*)\)/g, "<$2|$1>").replaceAll(
+    last.text.text += e.replaceAll(/^#+ +(.*) *$/g, "*$1*").replaceAll(/\*\*([^*]*)\*\*/g, "*$1*").replaceAll(/\[([^\]]*)\]\(([^)]*)\)/g, "<$2|$1>").replaceAll(
       new RegExp(`\\b${repoUrl}(pull|issue)/([0-9]+)\\b`, "g"),
       (url, _kind, num) => `<${url}|${repo}#${num}>`
     ).replaceAll(
