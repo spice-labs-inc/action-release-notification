@@ -1,6 +1,6 @@
 import { getInput, setFailed, setOutput } from "@actions/core";
 import { context, getOctokit } from "@actions/github";
-import { WebClient, type KnownBlock, type MarkdownBlock } from "@slack/web-api";
+import { WebClient, type KnownBlock } from "@slack/web-api";
 import type { ChannelAndBlocks } from "@slack/web-api/dist/types/request/chat";
 
 // Map github to slack usernames
@@ -125,12 +125,16 @@ try {
             owner,
             repo,
             per_page: 5,
-          })).data.map((c) => c.commit);
+          })).data.map((c) => ({
+            ...c.commit,
+            id: c.sha,
+            author: { ...c.commit.author!, username: c.author?.login ?? "" },
+          }));
     // Format with GitHub links - clean up commit messages for Slack
     const notes = commits
       .map(
         (e) =>
-          `- [${replaceSpecialChars(e.message.split("\n")[0]!)}](https://github.com/${owner}/${repo}/commit/${"id" in e ? e.id : e.tree.sha})`,
+          `- [${replaceSpecialChars(e.message.split("\n")[0]!)}](https://github.com/${owner}/${repo}/commit/${e.id})`,
       )
       .join("\n");
 
@@ -139,13 +143,12 @@ try {
         .replaceAll(/\|/g, "")
         .replaceAll(/</g, "&lt;")
         .replaceAll(/>/g, "&gt;")
-        .replaceAll(/\r/g, "")
-        .replaceAll(/'/g, "&#39;");
+        .replaceAll(/\r/g, "");
     }
 
     contributors = new Set(
       commits.map((c) =>
-        "username" in c.author! ? c.author.username : c.author!.email!,
+        c.author!.username || c.author!.email!,
       ) as GithubUsername[],
     );
 
@@ -315,7 +318,7 @@ async function getContributorsForTagOrRecent(
     });
     const contributors = new Set(
       commits.data.commits
-        .map((c) => c.commit.author?.email)
+        .map((c) => c.author?.login)
         .filter((e) => !!e)
         .sort() as GithubUsername[],
     );
@@ -329,7 +332,7 @@ async function getContributorsForTagOrRecent(
 
     const contributors = new Set(
       commits.data
-        .map((c) => c.author?.email)
+        .map((c) => c.author?.login)
         .filter((e) => !!e)
         .sort() as GithubUsername[],
     );
@@ -381,7 +384,7 @@ function formatBody(s: string): KnownBlock[] {
   let cleaned = s.replaceAll(/\r/g, "").replaceAll(/\0/g, "").split("\n");
 
   const out: KnownBlock[] = [];
-  let last_markdown: MarkdownBlock;
+  let last: { type: "section"; text: { type: "mrkdwn"; text: string } };
 
   for (const e of cleaned) {
     // Headings
@@ -391,26 +394,25 @@ function formatBody(s: string): KnownBlock[] {
       continue;
     }
 
-    if (out.at(-1)?.type != "markdown") {
-      last_markdown = { type: "markdown", text: "" };
-      out.push(last_markdown);
+    if (out.at(-1)?.type != "section" || last!.text.text.length > 2500) {
+      last = { type: "section", text: { type: "mrkdwn", text: "" } };
+      out.push(last as KnownBlock);
     }
 
     const repoUrl = `https://github\.com/${owner}/${repo}/`;
 
-    last_markdown!.text =
-      last_markdown!.text! +
+    last!.text.text +=
       e
         // Convert headings to bold
         .replaceAll(/^#+ +(.*) *$/g, "*$1*")
         // Convert **bold** to *bold* (Slack uses single asterisks for bold)
         .replaceAll(/\*\*([^*]*)\*\*/g, "*$1*")
         // Convert [link](url) to <url|link>
-        .replaceAll(/\[([^]]*)\]\(([^)])\)/g, "<$2|$1>")
+        .replaceAll(/\[([^]]*)\]\(([^)]*)\)/g, "<$2|$1>")
         // Shorten links that are within-repo
         .replaceAll(
           new RegExp(`\\b${repoUrl}(pull|issue)/([0-9]+)\\b`, "g"),
-          (url, _kind, num) => `[${repo}#${num}](${url})`,
+          (url, _kind, num) => `<${url}|${repo}#${num}>`,
         )
         // Convert GitHub @mentions to Slack mentions using username mapping
         .replaceAll(
@@ -420,9 +422,6 @@ function formatBody(s: string): KnownBlock[] {
           },
         ) +
       "\n";
-    // Truncate if too long (Slack has limits) - use alternative approach to avoid GitHub secret masking
-    if (last_markdown!.text!.length > 1500)
-      last_markdown!.text != `${last_markdown!.text!.slice(1499)}…`;
   }
 
   return out;

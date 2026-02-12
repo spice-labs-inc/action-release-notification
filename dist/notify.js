@@ -43008,7 +43008,7 @@ try {
   }
   if (type == "staging") {
     let replaceSpecialChars = function(s) {
-      return s.replaceAll(/\|/g, "").replaceAll(/</g, "&lt;").replaceAll(/>/g, "&gt;").replaceAll(/\r/g, "").replaceAll(/'/g, "&#39;");
+      return s.replaceAll(/\|/g, "").replaceAll(/</g, "&lt;").replaceAll(/>/g, "&gt;").replaceAll(/\r/g, "");
     };
     replaceSpecialChars2 = replaceSpecialChars;
     const push_commits = import_github.context.payload.commits;
@@ -43016,13 +43016,17 @@ try {
       owner,
       repo,
       per_page: 5
-    })).data.map((c) => c.commit);
+    })).data.map((c) => ({
+      ...c.commit,
+      id: c.sha,
+      author: { ...c.commit.author, username: c.author?.login ?? "" }
+    }));
     const notes = commits.map(
-      (e) => `- [${replaceSpecialChars(e.message.split("\n")[0])}](https://github.com/${owner}/${repo}/commit/${"id" in e ? e.id : e.tree.sha})`
+      (e) => `- [${replaceSpecialChars(e.message.split("\n")[0])}](https://github.com/${owner}/${repo}/commit/${e.id})`
     ).join("\n");
     contributors = new Set(
       commits.map(
-        (c) => "username" in c.author ? c.author.username : c.author.email
+        (c) => c.author.username || c.author.email
       )
     );
     await slack.chat.postMessage(
@@ -43168,7 +43172,7 @@ async function getContributorsForTagOrRecent(octokit2, head, base, opts) {
       head
     });
     const contributors = new Set(
-      commits.data.commits.map((c) => c.commit.author?.email).filter((e) => !!e).sort()
+      commits.data.commits.map((c) => c.author?.login).filter((e) => !!e).sort()
     );
     return contributors;
   } else {
@@ -43177,7 +43181,7 @@ async function getContributorsForTagOrRecent(octokit2, head, base, opts) {
       per_page: 10
     });
     const contributors = new Set(
-      commits.data.map((c) => c.author?.email).filter((e) => !!e).sort()
+      commits.data.map((c) => c.author?.login).filter((e) => !!e).sort()
     );
     return contributors;
   }
@@ -43197,29 +43201,27 @@ function error(s) {
 function formatBody(s) {
   let cleaned = s.replaceAll(/\r/g, "").replaceAll(/\0/g, "").split("\n");
   const out = [];
-  let last_markdown;
+  let last;
   for (const e of cleaned) {
     const m = /^#+ +(.+?) *$/.exec(e);
     if (m) {
       out.push({ type: "header", text: { type: "plain_text", text: m[1] } });
       continue;
     }
-    if (out.at(-1)?.type != "markdown") {
-      last_markdown = { type: "markdown", text: "" };
-      out.push(last_markdown);
+    if (out.at(-1)?.type != "section" || last.text.text.length > 2500) {
+      last = { type: "section", text: { type: "mrkdwn", text: "" } };
+      out.push(last);
     }
     const repoUrl = `https://github.com/${owner}/${repo}/`;
-    last_markdown.text = last_markdown.text + e.replaceAll(/^#+ +(.*) *$/g, "*$1*").replaceAll(/\*\*([^*]*)\*\*/g, "*$1*").replaceAll(/\[([^]]*)\]\(([^)])\)/g, "<$2|$1>").replaceAll(
+    last.text.text += e.replaceAll(/^#+ +(.*) *$/g, "*$1*").replaceAll(/\*\*([^*]*)\*\*/g, "*$1*").replaceAll(/\[([^]]*)\]\(([^)]*)\)/g, "<$2|$1>").replaceAll(
       new RegExp(`\\b${repoUrl}(pull|issue)/([0-9]+)\\b`, "g"),
-      (url, _kind, num) => `[${repo}#${num}](${url})`
+      (url, _kind, num) => `<${url}|${repo}#${num}>`
     ).replaceAll(
       /@([a-zA-Z0-9_-]+)/g,
       function(_, u) {
         return formatMention(u);
       }
     ) + "\n";
-    if (last_markdown.text.length > 1500)
-      last_markdown.text != `${last_markdown.text.slice(1499)}\u2026`;
   }
   return out;
 }
