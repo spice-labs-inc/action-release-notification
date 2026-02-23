@@ -252,13 +252,13 @@ function messageForStagingNotification(inputs: {
   const formatted_notes = formatBody(inputs.notes);
   const R: ChannelAndBlocks = {
     channel,
-    text: `Staging Updated: ${environment}`,
+    text: `Deployed: ${repository} → ${environment}`,
     blocks: [
       {
         type: "header",
         text: {
           type: "plain_text",
-          text: `🔄 Staging Updated: ${environment}`,
+          text: `🔄 Deployed: ${repository} → ${environment}`,
         },
       },
       {
@@ -290,7 +290,7 @@ function messageForStagingNotification(inputs: {
                   type: "button",
                   text: {
                     type: "plain_text",
-                    text: "View Staging",
+                    text: `View ${environment}`,
                   },
                   url: staging_url,
                 },
