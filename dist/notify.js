@@ -43111,13 +43111,13 @@ function messageForStagingNotification(inputs) {
   const formatted_notes = formatBody(inputs.notes);
   const R = {
     channel,
-    text: `Staging Updated: ${environment}`,
+    text: `Deployed: ${repository} \u2192 ${environment}`,
     blocks: [
       {
         type: "header",
         text: {
           type: "plain_text",
-          text: `\u{1F504} Staging Updated: ${environment}`
+          text: `\u{1F504} Deployed: ${repository} \u2192 ${environment}`
         }
       },
       {
@@ -43153,7 +43153,7 @@ ${Array.from(inputs.contributors).map(formatMention).join(" ") || "No contributo
               type: "button",
               text: {
                 type: "plain_text",
-                text: "View Staging"
+                text: `View ${environment}`
               },
               url: staging_url
             }
